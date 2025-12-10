@@ -25,9 +25,19 @@ def _prepare_energy_grid(phi_slice: np.ndarray, h_slice: np.ndarray, r_slice: np
     return E_grid, pperp_limbwd, pperp_limfwd
 
   for idx in range(nE):
-    pperp_vals = (E_grid[idx] + phi_slice - phi_slice[ip]) / (h_slice[ip] ** 2 / h_slice**2 - 1) - (r_slice[ip] ** 2) / h_slice[ip] ** 4
-    pperp_limbwd[idx] = max(0.0, np.min(pperp_vals[: ip + 1]))
-    pperp_limfwd[idx] = max(0.0, np.max(pperp_vals[ip + 1 :]))
+    denom = h_slice[ip] ** 2 / h_slice**2 - 1
+    with np.errstate(divide="ignore", invalid="ignore"):
+      pperp_vals = np.divide(E_grid[idx] + phi_slice - phi_slice[ip], denom, where=denom != 0)
+    pperp_vals -= (r_slice[ip] ** 2) / h_slice[ip] ** 4
+    pperp_vals[~np.isfinite(pperp_vals)] = np.nan
+
+    backward = pperp_vals[: ip + 1]
+    forward = pperp_vals[ip + 1 :]
+
+    if np.isfinite(backward).any():
+      pperp_limbwd[idx] = max(0.0, np.nanmin(backward))
+    if np.isfinite(forward).any():
+      pperp_limfwd[idx] = max(0.0, np.nanmax(forward))
   if ip == 0:
     pperp_limbwd[0] = np.inf
   return E_grid, pperp_limbwd, pperp_limfwd
