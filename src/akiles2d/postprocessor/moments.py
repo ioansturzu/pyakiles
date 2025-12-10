@@ -36,10 +36,10 @@ def moments(data: Data, solution: dict[str, object]) -> dict[str, object]:
     ll = ["", "1", "2", "4"]
     for l in ll:
       n = solution[prefix][f"M000{l}"]
-      u = solution[prefix][f"M100{l}"] / n
-      Tz = solution[prefix][f"M200{l}"] / n - u**2
-      Tr = solution[prefix][f"M020{l}"] / n
-      Ttheta = solution[prefix][f"M002{l}"] / n
+      u = np.divide(solution[prefix][f"M100{l}"], n, out=np.zeros_like(n), where=n != 0)
+      Tz = np.divide(solution[prefix][f"M200{l}"], n, out=np.zeros_like(n), where=n != 0) - u**2
+      Tr = np.divide(solution[prefix][f"M020{l}"], n, out=np.zeros_like(n), where=n != 0)
+      Ttheta = np.divide(solution[prefix][f"M002{l}"], n, out=np.zeros_like(n), where=n != 0)
       solution[prefix][f"n{l}"] = n
       solution[prefix][f"u{l}"] = u
       solution[prefix][f"Tz{l}"] = Tz
