@@ -1,0 +1,16 @@
+[project]
+name = "pyakiles"
+version = "0.1.0"
+description = "Python translation of the AKILES2D MATLAB code"
+authors = [{name = "AKILES2D Translators", email = "maintainer@example.com"}]
+requires-python = ">=3.12"
+dependencies = [
+  "numpy",
+  "scipy",
+  "pytest",
+]
+
+[tool.uv]
+package = true
+src = "src"
+
