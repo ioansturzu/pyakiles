@@ -17,14 +17,14 @@ def _adapted_errorfcn(data: Data, solution: dict[str, object], phii: float, idx:
   phi_copy[idx] = phii
   trial["phi"] = phi_copy
   trial["npoints"] = int(phi_copy.size)
-  return float(errorfcn(data, trial, [idx + 1]))
+  return float(np.asarray(errorfcn(data, trial, [idx + 1])).item())
 
 
 def _adapted_errorfcn2(data: Data, solution: dict[str, object], phi: np.ndarray) -> float:
   trial = dict(solution)
   trial["phi"] = phi
   trial["npoints"] = int(phi.size)
-  return float(errorfcn(data, trial, [phi.size]))
+  return float(np.asarray(errorfcn(data, trial, [phi.size])).item())
 
 
 def solver(data: Data, solution: Dict[str, object]) -> Dict[str, object]:
