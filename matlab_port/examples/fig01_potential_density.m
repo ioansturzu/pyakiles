@@ -16,7 +16,9 @@ function fig01_potential_density()
   h = [linspace(1, 4, npoints - 1), inf];
   r = zeros(1, npoints);
   phi_guess = linspace(0, -3, npoints);
-  guess = akiles2d.simrc.default_guess();
+  % Get default guess from simrc
+  d = akiles2d.simrc();
+  guess = d.guess;
   guess.h = h(:);
   guess.r = r(:);
   guess.phi = phi_guess(:);
