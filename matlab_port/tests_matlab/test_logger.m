@@ -1,5 +1,6 @@
 function tests = test_logger
 % Migration tests for logger utilities.
+import akiles2d.logger.*
 tests = functiontests(localfunctions);
 
 function testLogWritesFile(testCase)

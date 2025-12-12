@@ -17,6 +17,7 @@ function [data,solution] = akiles2d(simrcfile,userdata)
 
 %% Code version (must update manually when codebase changes)
 VERSION = '20200901';
+import akiles2d.logger.*
 
 %% Run data preprocessor to prepare data structure
 if ~exist('simrcfile','var')

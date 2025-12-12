@@ -4,8 +4,13 @@
 % the article figures.
 
 function fig01_potential_density()
-  addpath(fullfile(pwd, 'matlab_port'));
-  addpath(fullfile(pwd, 'matlab_port', 'src'));
+  % Ensure we can find the package. If run from repo root, 'matlab_port' is enough.
+  % If run from inside examples, we need to go up.
+  if exist('matlab_port', 'dir')
+      addpath(fullfile(pwd, 'matlab_port'));
+  elseif exist(fullfile('..', '..', 'matlab_port'), 'dir')
+      addpath(fullfile(pwd, '..', '..', 'matlab_port'));
+  end
 
   npoints = 80;
   h = [linspace(1, 4, npoints - 1), inf];
@@ -20,7 +25,13 @@ function fig01_potential_density()
   userdata.guess = guess;
   userdata.electrons.model = 'semimaxwellian';
   userdata.electrons.nintegrationpoints = [80, 40];
-  userdata.akiles2d.simdir = fullfile(pwd, 'matlab_port', 'examples', 'sims_fig01');
+  
+  % Set simulation directory relative to current location
+  userdata.akiles2d.simdir = fullfile(pwd, 'sims_fig01');
+  if ~exist(userdata.akiles2d.simdir, 'dir')
+      mkdir(userdata.akiles2d.simdir);
+  end
+
   userdata.akiles2d.maxiter = 3;
   userdata.akiles2d.tolerance = 1e-3;
   userdata.akiles2d.datafile = fullfile(userdata.akiles2d.simdir, 'data.mat');
@@ -55,7 +66,7 @@ function fig01_potential_density()
       % Actually, let's just use a struct and jsonencode
   end
   
-  fid = fopen('fig01_results.json', 'w');
+  fid = fopen(fullfile(userdata.akiles2d.simdir, 'fig01_results.json'), 'w');
   if fid == -1, error('Cannot create JSON file'); end
   fwrite(fid, jsonencode(results));
   fclose(fid);

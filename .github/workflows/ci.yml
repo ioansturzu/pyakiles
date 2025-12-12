@@ -58,14 +58,13 @@ jobs:
       with:
         command: |
           addpath(genpath('matlab_port')); 
-          cd matlab_port/examples; 
           fig01_potential_density
           
     - name: Upload MATLAB Results
       uses: actions/upload-artifact@v4
       with:
         name: matlab-results
-        path: matlab_port/examples/fig01_results.json
+        path: sims_fig01/fig01_results.json
 
   compare-results:
     needs: [python-tests, matlab-tests]
