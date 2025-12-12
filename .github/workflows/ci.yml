@@ -37,7 +37,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: python-results
-        path: examples/python/fig01_results.json
+        path: |
+          examples/python/fig01_results.json
+          examples/python/fig01_potential_density.png
 
   matlab-tests:
     runs-on: ubuntu-latest
@@ -64,7 +66,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: matlab-results
-        path: sims_fig01/fig01_results.json
+        path: |
+          sims_fig01/fig01_results.json
+          sims_fig01/fig01_potential_density.png
 
   compare-results:
     needs: [python-tests, matlab-tests]
