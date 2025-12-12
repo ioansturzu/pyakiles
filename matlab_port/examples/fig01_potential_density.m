@@ -48,8 +48,8 @@ function fig01_potential_density()
   xlabel('Normalized position h');
   title('Figure 1: potential and density along plume');
   yyaxis right;
-  plot(sol.electrons.n, '--', 'LineWidth', 1.3); hold on;
-  plot(sol.ions.n, ':', 'LineWidth', 1.3);
+  plot(sol.h, sol.electrons.n, '--', 'LineWidth', 1.3); hold on;
+  plot(sol.h, sol.ions.n, ':', 'LineWidth', 1.3);
   ylabel('Density (normalized)');
   legend({'\phi', 'n_e', 'n_i'}, 'Location', 'northeast');
   saveas(gcf, fullfile(userdata.akiles2d.simdir, 'fig01_potential_density.png'));
