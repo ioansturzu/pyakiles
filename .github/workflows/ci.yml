@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      
+    - name: Set up Python
+      run: uv python install 3.12
+      
+    - name: Install dependencies
+      run: uv sync --all-extras --dev
+      
+    - name: Run tests
+      run: uv run pytest
+      
+    - name: Generate Fig01 Data
+      run: |
+        # We run the script to generate the output files
+        # Ideally we modify the script to dump JSON or we assume it saves to a known location
+        # The current script saves a .png, we might need a small patch or wrapper to extract numbers
+        # For now, let's assume we will add a flag or a wrapper.
+        # Let's run it as is to ensure no errors first.
+        uv run examples/python/fig01_potential_density.py
+        
+    - name: Upload Python Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-results
+        path: examples/python/fig01_results.json
+
+  matlab-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up MATLAB
+      uses: matlab-actions/setup-matlab@v2
+      
+    - name: Run Tests
+      uses: matlab-actions/run-tests@v2
+      with:
+        source-folder: matlab_port/src
+        select-by-folder: matlab_port/tests_matlab
+        
+    - name: Run Fig01 Example
+      uses: matlab-actions/run-command@v2
+      with:
+        command: |
+          addpath(genpath('matlab_port')); 
+          cd matlab_port/examples; 
+          fig01_potential_density
+          
+    - name: Upload MATLAB Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: matlab-results
+        path: matlab_port/examples/fig01_results.json
+
+  compare-results:
+    needs: [python-tests, matlab-tests]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download Python Results
+      uses: actions/download-artifact@v4
+      with:
+        name: python-results
+        path: results/python
+        
+    - name: Download MATLAB Results
+      uses: actions/download-artifact@v4
+      with:
+        name: matlab-results
+        path: results/matlab
+        
+    - name: Set up Python
+      uses: astral-sh/setup-uv@v4
+      
+    - name: Compare Results
+      run: |
+        uv run python scripts/compare_results.py results/python/fig01_results.json results/matlab/fig01_results.json

@@ -40,4 +40,23 @@ function fig01_potential_density()
   ylabel('Density (normalized)');
   legend({'\phi', 'n_e', 'n_i'}, 'Location', 'northeast');
   saveas(gcf, fullfile(userdata.akiles2d.simdir, 'fig01_potential_density.png'));
+
+  % Save results for CI comparison
+  results.h = sol.h(:)';
+  results.phi = sol.phi(:)';
+  results.ne = sol.electrons.n(:)';
+  results.ni = sol.ions.n(:)';
+  
+  if isinf(results.h(end))
+      % Replace inf with "inf" string for JSON consistency or handle in reader
+      % MATLAB jsonencode handles Inf as null or similar depending on version,
+      % but let's stringify or just leave it and handle in Python
+      results.h(end) = 1e308; % Use large number as placeholder if needed, or rely on Python reader
+      % Actually, let's just use a struct and jsonencode
+  end
+  
+  fid = fopen('fig01_results.json', 'w');
+  if fid == -1, error('Cannot create JSON file'); end
+  fwrite(fid, jsonencode(results));
+  fclose(fid);
 end

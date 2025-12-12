@@ -87,6 +87,24 @@ def main() -> None:
   _, solution = run_simulation()
   plot_profiles(solution)
 
+  # Save results for CI comparison
+  import json
+  
+  results = {
+      "h": np.asarray(solution["h"], dtype=float).tolist(),
+      "phi": np.asarray(solution["phi"], dtype=float).tolist(),
+      "ne": np.asarray(solution["electrons"]["n"], dtype=float).tolist(),
+      "ni": np.asarray(solution["ions"]["n"], dtype=float).tolist(),
+  }
+  
+  # Handle infinity for JSON compliance if necessary, though standard json might error on inf.
+  # Let's replace inf with a large number or string for safety, or just let users handle it.
+  # For this specific case, h[-1] is inf.
+  if len(results["h"]) > 0 and np.isinf(results["h"][-1]):
+      results["h"][-1] = "inf"
+
+  with open(Path("examples/python/fig01_results.json"), "w") as f:
+      json.dump(results, f, indent=2)
 
 if __name__ == "__main__":
   main()
