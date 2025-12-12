@@ -31,12 +31,9 @@ if exist('simrcfile','var') && ~isempty(simrcfile)
     data = usersimrc(data);
 end
 
-% userdata structure overwrites defaults 
+% userdata structure overwrites defaults (deep merge)
 if exist('userdata','var') && ~isempty(userdata)
-    f = fieldnames(userdata); 
-    for i = 1:length(f)
-        data.(f{i}) = userdata.(f{i});
-    end
+    data = mergestruct(data,userdata);
 end   
 
 %% General
@@ -44,3 +41,15 @@ data.akiles2d.datafile = fullfile(data.akiles2d.simdir,'data.mat'); % path to fi
 
 %% Logger
 data.logger.logfile = fullfile(data.akiles2d.simdir,'log.txt'); % path to file where the log will be saved
+end
+
+function s1 = mergestruct(s1,s2)
+    f = fieldnames(s2);
+    for i = 1:length(f)
+        if isfield(s1,f{i}) && isstruct(s1.(f{i})) && isstruct(s2.(f{i}))
+            s1.(f{i}) = mergestruct(s1.(f{i}),s2.(f{i}));
+        else
+            s1.(f{i}) = s2.(f{i});
+        end
+    end
+end
