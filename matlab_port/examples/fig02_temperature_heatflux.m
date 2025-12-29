@@ -2,7 +2,11 @@
 % Parallel/perpendicular electron temperatures and axial heat flux obtained from
 % AKILES2D kinetic moments with a reduced grid for quick visualization.
 
-function fig02_temperature_heatflux()
+function fig02_temperature_heatflux(test_mode)
+  if ~exist('test_mode', 'var')
+      test_mode = false;
+  end
+
   addpath(fullfile(pwd, 'matlab_port'));
   addpath(fullfile(pwd, 'matlab_port', 'src'));
 
@@ -12,6 +16,14 @@ function fig02_temperature_heatflux()
   if ~exist(userdata.akiles2d.simdir, 'dir'); mkdir(userdata.akiles2d.simdir); end
   userdata.akiles2d.datafile = fullfile(userdata.akiles2d.simdir, 'data.mat');
   
+  if test_mode
+      disp('Running in TEST mode (npoints=50)');
+      npoints = 50;
+      userdata.guess.h = [linspace(1,5,npoints-1),Inf].'; 
+      userdata.guess.r = zeros(1,npoints).'; 
+      userdata.guess.phi = linspace(0,-4,npoints).';
+  end
+
   % Override solver settings to match Python defaults
   userdata.akiles2d.maxiter = 5;
   userdata.akiles2d.tolerance = 2e-2;

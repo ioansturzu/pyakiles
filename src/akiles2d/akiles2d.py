@@ -54,7 +54,8 @@ def akiles2d(simrcfile: str | None = None, userdata: dict[str, object] | None = 
 
   for iiter in range(data.akiles2d.maxiter + 1):
     solution["errorfcn"] = errorfcn(data, solution)
-    normerror = float(np.linalg.norm(solution["errorfcn"]))
+    # Compute RMS error to be independent of grid size
+    normerror = float(np.linalg.norm(solution["errorfcn"]) / np.sqrt(solution["errorfcn"].size))
 
     iteration_file = Path(data.akiles2d.simdir) / f"{iiter}.mat"
     iteration_file.write_text("iteration placeholder\n")

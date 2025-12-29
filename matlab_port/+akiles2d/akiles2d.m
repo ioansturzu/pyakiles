@@ -45,7 +45,7 @@ solution.npoints = numel(solution.h);
 for iiter = 0:data.akiles2d.maxiter
     %% Compute error and Jacobian matrix
     solution.errorfcn = akiles2d.solver.errorfcn(data,solution);
-    normerror = norm(solution.errorfcn);
+    normerror = norm(solution.errorfcn) / sqrt(numel(solution.errorfcn));
 
     %% Save current solution to file and log message
     solutionfile = fullfile(data.akiles2d.simdir,[num2str(iiter),'.mat']);
@@ -56,7 +56,7 @@ for iiter = 0:data.akiles2d.maxiter
     akiles2d.logger.write(num2str(solution.errorfcn),1,data.logger);
 
     %% Check convergence
-    if norm(solution.errorfcn) < data.akiles2d.tolerance
+    if norm(solution.errorfcn)/ sqrt(numel(solution.errorfcn)) < data.akiles2d.tolerance
         akiles2d.logger.log(['Convergence reached successfully at iteration ',num2str(iiter),'.'],'INF',5,data.logger);
          solutionfile = fullfile(data.akiles2d.simdir,'final.mat');
          save(solutionfile,'-struct','solution');
@@ -85,13 +85,3 @@ akiles2d.logger.log(['Solution saved to ',solutionfile],'INF',5,data.logger);
 
 %% Farewell
 akiles2d.logger.title('AKILES2D execution finished.',10,data.logger);
-
-
-
-
-
-
-
-
-
-

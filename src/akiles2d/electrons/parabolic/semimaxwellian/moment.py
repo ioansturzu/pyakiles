@@ -27,7 +27,8 @@ def _prepare_energy_grid(phi_slice: np.ndarray, h_slice: np.ndarray, r_slice: np
   for idx in range(nE):
     denom = h_slice[ip] ** 2 / h_slice**2 - 1
     with np.errstate(divide="ignore", invalid="ignore"):
-      pperp_vals = np.divide(E_grid[idx] + phi_slice - phi_slice[ip], denom, where=denom != 0)
+      pperp_vals = np.full_like(denom, np.nan)
+      np.divide(E_grid[idx] + phi_slice - phi_slice[ip], denom, out=pperp_vals, where=denom != 0)
     pperp_vals -= (r_slice[ip] ** 2) / h_slice[ip] ** 4
     pperp_vals[~np.isfinite(pperp_vals)] = np.nan
 
