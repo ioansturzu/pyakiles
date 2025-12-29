@@ -6,24 +6,18 @@ function fig02_temperature_heatflux()
   addpath(fullfile(pwd, 'matlab_port'));
   addpath(fullfile(pwd, 'matlab_port', 'src'));
 
-  npoints = 80;
-  h = [linspace(1, 4, npoints - 1), inf];
-  r = zeros(1, npoints);
-  phi_guess = linspace(0, -3, npoints);
-  guess = akiles2d.simrc.default_guess();
-  guess.h = h(:);
-  guess.r = r(:);
-  guess.phi = phi_guess(:);
-  guess.ne00p = 0.5;
-
-  userdata.guess = guess;
-  userdata.electrons.model = 'semimaxwellian';
-  userdata.electrons.nintegrationpoints = [80, 40];
+  % Use default configuration
+  userdata = akiles2d.simrc();
   userdata.akiles2d.simdir = fullfile(pwd, 'matlab_port', 'examples', 'sims_fig02');
-  userdata.akiles2d.maxiter = 3;
-  userdata.akiles2d.tolerance = 1e-3;
+  if ~exist(userdata.akiles2d.simdir, 'dir'); mkdir(userdata.akiles2d.simdir); end
   userdata.akiles2d.datafile = fullfile(userdata.akiles2d.simdir, 'data.mat');
-  userdata.postprocessor.postfunctions = {'moments', 'EEDF'};
+  
+  % Override solver settings to match Python defaults
+  userdata.akiles2d.maxiter = 5;
+  userdata.akiles2d.tolerance = 2e-2;
+  userdata.solver.phibracket = [-10.0, 0.0];
+  % Ensure moments postprocessor is active (it is by default but being explicit is fine)
+  userdata.postprocessor.postfunctions = {'moments'};
 
   [~, sol] = akiles2d.akiles2d([], userdata);
 
@@ -33,6 +27,8 @@ function fig02_temperature_heatflux()
   xlabel('Normalized position h');
   ylabel('Temperature (normalized)');
   legend({'T_{||}', 'T_{\perp}'}, 'Location', 'northeast');
+  idx_finite = ~isinf(sol.h);
+  xlim([1, max(sol.h(idx_finite))]);
   title('Figure 2: electron temperatures');
   saveas(gcf, fullfile(userdata.akiles2d.simdir, 'fig02_temperatures.png'));
 
@@ -40,6 +36,21 @@ function fig02_temperature_heatflux()
   plot(sol.h, sol.electrons.qzz, 'LineWidth', 1.3);
   xlabel('Normalized position h');
   ylabel('Axial heat flux q_z');
+  xlim([1, max(sol.h(idx_finite))]);
   title('Figure 2: axial heat flux');
   saveas(gcf, fullfile(userdata.akiles2d.simdir, 'fig02_heatflux.png'));
+
+  % Save results for CI comparison
+  results.r = sol.r(:)';
+  results.Tz_e = sol.electrons.Tz(:)';
+  results.Tr_e = sol.electrons.Tr(:)';
+  results.Tz_i = sol.ions.Tz(:)';
+  results.qzz_e = sol.electrons.qzz(:)';
+  results.qzr_e = sol.electrons.qzr(:)';
+  results.qzz_i = sol.ions.qzz(:)';
+
+  fid = fopen(fullfile(userdata.akiles2d.simdir, 'fig02_results.json'), 'w');
+  if fid == -1, error('Cannot create JSON file'); end
+  fwrite(fid, jsonencode(results, 'PrettyPrint', true));
+  fclose(fid);
 end

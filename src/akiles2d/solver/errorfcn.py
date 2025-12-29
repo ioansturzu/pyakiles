@@ -35,7 +35,13 @@ def errorfcn(data: Data, solution: dict[str, object], ierr: np.ndarray | list[in
 
   electrons_moment = epar.semimaxwellian.moment(data, solution, 0, 0, 0, ierr_arr + 1)[0]
   ions_moment = ipar.cold.moment(data, solution, 0, 0, 0, ierr_arr + 1)[0]
-  error_vec = 1 - electrons_moment / ions_moment
+  
+  # Handle division by zero where ions_moment is 0 (e.g. at infinity)
+  with np.errstate(divide="ignore", invalid="ignore"):
+    ratio = electrons_moment / ions_moment
+    ratio[ions_moment == 0] = 0.0 # Force ratio to 0 if no ions, implying error=1
+  
+  error_vec = 1 - ratio
 
   infinity_mask = ierr_arr == (npoints - 1)
   if data.solver.errorfcn == "netcurrent" and infinity_mask.any():

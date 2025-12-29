@@ -27,32 +27,18 @@ from akiles2d.simrc import (
 )
 
 
+from akiles2d.simrc import Akiles2DConfig, simrc
+
 def run_simulation() -> tuple[dict, dict]:
-  """Run a fast AKILES2D solve tailored for plotting profiles.
-
-  The configuration mirrors the article but uses fewer grid points and energy
-  integration bins to keep the example interactive.
-  """
-
-  npoints = 80
-  h = np.concatenate([np.linspace(1.0, 4.0, npoints - 1), np.array([np.inf])])
-  r = np.zeros(npoints)
-  phi_guess = np.linspace(0.0, -3.0, npoints)
-
-  guess = Guess(h=h, r=r, phi=phi_guess, ne00p=0.5)
+  """Run the standard AKILES2D solve (default parameters)."""
   simdir = Path("examples/python/sims_fig01")
+  
+  # Override settings using dataclass to preserve object structure
   userdata = {
-    "guess": guess,
-    "electrons": ElectronConfig(nintegrationpoints=(80, 40), alpha=1.0),
-    "akiles2d": Akiles2DConfig(
-      simdir=str(simdir),
-      maxiter=3,
-      tolerance=1e-3,
-      datafile=str(simdir / "data.mat"),
-    ),
-    "postprocessor": PostprocessorConfig(postfunctions=["moments", "EEDF"]),
+    "akiles2d": Akiles2DConfig(simdir=str(simdir), datafile=str(simdir / "data.mat"))
   }
-
+  
+  # Run simulation using defaults (implicit) + userdata overrides
   data, solution = akiles2d(userdata=userdata)
   return data, solution
 
@@ -103,7 +89,7 @@ def main() -> None:
   if len(results["h"]) > 0 and np.isinf(results["h"][-1]):
       results["h"][-1] = "inf"
 
-  with open(Path("examples/python/fig01_results.json"), "w") as f:
+  with open(Path(__file__).with_name("fig01_results.json"), "w") as f:
       json.dump(results, f, indent=2)
 
 if __name__ == "__main__":

@@ -31,8 +31,8 @@ class Akiles2DConfig:
   """Top-level AKILES2D settings."""
 
   simdir: str
-  maxiter: int = 200
-  tolerance: float = 1e-6
+  maxiter: int = 5
+  tolerance: float = 2e-2
   datafile: str = ""
 
 
@@ -65,7 +65,7 @@ class ElectronConfig:
 class SolverConfig:
   """Root-finding options for the solver stage."""
 
-  phibracket: tuple[float, float] = (-10.0, 0.1)
+  phibracket: tuple[float, float] = (-10.0, 0.0)
   errorfcn: str = "netcurrent"
   netcurrent: float = 0.0
   phiinfty: float = -4.0

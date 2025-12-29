@@ -34,10 +34,13 @@ def solver(data: Data, solution: Dict[str, object]) -> Dict[str, object]:
   npoints = int(solution["npoints"])
 
   error0 = float(solution["errorfcn"][0])
-  solution["ne00p"] = solution["ne00p"] - error0 / (error0 - 1.0) * solution["ne00p"]
+  
+  if abs(error0 - 1.0) > 1e-6:
+    new_ne00p = solution["ne00p"] - error0 / (error0 - 1.0) * solution["ne00p"]
+    solution["ne00p"] = max(1e-6, new_ne00p)
 
   try:
-    result = root_scalar(lambda factor: _adapted_errorfcn2(data, solution, factor * np.asarray(solution["phi"])), x0=1.0, x1=1.1)
+    result = root_scalar(lambda factor: _adapted_errorfcn2(data, solution, factor * np.asarray(solution["phi"])), bracket=[0.1, 10.0], method="brentq")
     if result.converged:
       solution["phi"] = np.asarray(solution["phi"]) * result.root
   except Exception:

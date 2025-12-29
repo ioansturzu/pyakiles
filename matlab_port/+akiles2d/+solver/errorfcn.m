@@ -27,7 +27,10 @@ end
 %% Quasineutrality error
 ne = akiles2d.electrons.(data.potential.model).(data.electrons.model).moment(data,solution,0,0,0,ierr); 
 ni  = akiles2d.ions.(data.potential.model).(data.ions.model).moment(data,solution,0,0,0,ierr);
-errorfcn = 1-ne./ni;  
+
+ratio = ne./ni;
+ratio(ni==0) = 0; % Avoid division by zero
+errorfcn = 1-ratio;  
 
 %% Electric current error
 infinity = (ierr==npoints);

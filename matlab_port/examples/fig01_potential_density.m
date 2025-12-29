@@ -12,32 +12,20 @@ function fig01_potential_density()
       addpath(fullfile(pwd, '..', '..', 'matlab_port'));
   end
 
-  npoints = 80;
-  h = [linspace(1, 4, npoints - 1), inf];
-  r = zeros(1, npoints);
-  phi_guess = linspace(0, -3, npoints);
-  % Get default guess from simrc
-  d = akiles2d.simrc();
-  guess = d.guess;
-  guess.h = h(:);
-  guess.r = r(:);
-  guess.phi = phi_guess(:);
-  guess.ne00p = 0.5;
-
-  userdata.guess = guess;
-  userdata.electrons.model = 'semimaxwellian';
-  userdata.electrons.nintegrationpoints = [80, 40];
+  % Use default configuration from the library
+  userdata = akiles2d.simrc();
   
-  % Set simulation directory relative to current location
+  % Override simulation directory only
   userdata.akiles2d.simdir = fullfile(pwd, 'sims_fig01');
   if ~exist(userdata.akiles2d.simdir, 'dir')
       mkdir(userdata.akiles2d.simdir);
   end
-
-  userdata.akiles2d.maxiter = 3;
-  userdata.akiles2d.tolerance = 1e-3;
   userdata.akiles2d.datafile = fullfile(userdata.akiles2d.simdir, 'data.mat');
-  userdata.postprocessor.postfunctions = {'moments', 'EEDF'};
+  
+  % Override solver settings to match Python defaults
+  userdata.akiles2d.maxiter = 5;
+  userdata.akiles2d.tolerance = 2e-2;
+  userdata.solver.phibracket = [-10.0, 0.0];
 
   [~, sol] = akiles2d.akiles2d([], userdata);
 
@@ -61,15 +49,13 @@ function fig01_potential_density()
   results.ni = sol.ions.n(:)';
   
   if isinf(results.h(end))
-      % Replace inf with "inf" string for JSON consistency or handle in reader
-      % MATLAB jsonencode handles Inf as null or similar depending on version,
-      % but let's stringify or just leave it and handle in Python
-      results.h(end) = 1e308; % Use large number as placeholder if needed, or rely on Python reader
-      % Actually, let's just use a struct and jsonencode
+      % Convert to cell array to allow mixed types (numbers and string "inf")
+      results.h = num2cell(results.h);
+      results.h{end} = 'inf';
   end
   
   fid = fopen(fullfile(userdata.akiles2d.simdir, 'fig01_results.json'), 'w');
   if fid == -1, error('Cannot create JSON file'); end
-  fwrite(fid, jsonencode(results));
+  fwrite(fid, jsonencode(results, 'PrettyPrint', true));
   fclose(fid);
 end

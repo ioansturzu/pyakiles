@@ -22,9 +22,15 @@ phibracket = data.solver.phibracket;
 npoints = solution.npoints; 
 
 %% Compute new ne00p and phi 
-solution.ne00p = solution.ne00p - solution.errorfcn(1)/(solution.errorfcn(1)-1)*solution.ne00p;    
+error0 = solution.errorfcn(1);
+if abs(error0 - 1.0) > 1e-6
+    new_ne00p = solution.ne00p - error0/(error0-1)*solution.ne00p;
+    solution.ne00p = max(1e-6, new_ne00p);
+end
+
 try
-    factor = fzero(@(factor)adapted_errorfcn2(data,solution,factor*solution.phi),1);  
+    % Use bounded search [0.1, 10] instead of unbounded
+    factor = fzero(@(factor)adapted_errorfcn2(data,solution,factor*solution.phi),[0.1, 10]);  
     solution.phi = factor*solution.phi;
 catch
     disp(['fzero failed for: infty'])
