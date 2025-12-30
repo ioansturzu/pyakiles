@@ -88,6 +88,47 @@ def _prepare_energy_grid(phi_slice: np.ndarray, h_slice: np.ndarray, r_slice: np
   return E_grid, pperp_limbwd, pperp_limfwd
 
 
+from concurrent.futures import ThreadPoolExecutor
+
+def _Hijk(a, b, val):
+    return np.maximum(0.0, gamma(val) * (gammainc(val, b) - gammainc(val, a)))
+
+def _dGijk(E_a, E_b, G_a, G_b, val1, val2):
+    numerator = gamma(val1) * (G_b * E_a - G_a * E_b) * (gammainc(val1, E_b) - gammainc(val1, E_a))
+    numerator += gamma(val2) * (G_a - G_b) * (gammainc(val2, E_b) - gammainc(val2, E_a))
+    denom = E_a - E_b
+    return numerator / denom
+
+def _compute_point_moment(args):
+    ip, factor, phi, h, r, nintegrationpoints, evz, evr, evtheta, alpha = args
+    
+    # Pre-calculate constants for Hijk/dGijk to avoid repeated gamma calls if costly (optional optimization)
+    # Passed as args to helpers
+    h_val = (2 + evr + evtheta) / 2
+    dg1 = (1 + evz) / 2
+    dg2 = (3 + evz) / 2
+    
+    E_grid, pperp_limbwd, pperp_limfwd = _prepare_energy_grid(phi, h, r, ip, nintegrationpoints)
+    
+    H1 = _Hijk(pperp_limfwd, pperp_limbwd, h_val)
+    dG1 = _dGijk(E_grid[:-1], E_grid[1:], H1[:-1], H1[1:], dg1, dg2)
+    tail = H1[-1] * gamma(dg1) * gammaincc(dg1, E_grid[-1])
+    m1 = factor * (np.sum(dG1) + tail)
+
+    m2 = 0.0
+    m4 = 0.0
+    
+    if evz % 2 != 1:
+      H2 = _Hijk(np.zeros_like(pperp_limbwd), np.minimum(pperp_limbwd, pperp_limfwd), h_val)
+      dG2 = _dGijk(E_grid[:-1], E_grid[1:], H2[:-1], H2[1:], dg1, dg2)
+      m2 = 2 * factor * np.sum(dG2)
+
+      H4 = _Hijk(pperp_limbwd, pperp_limfwd, h_val)
+      dG4 = _dGijk(E_grid[:-1], E_grid[1:], H4[:-1], H4[1:], dg1, dg2)
+      m4 = 2 * alpha * factor * np.sum(dG4)
+      
+    return m1, m2, m4
+
 def moment(data: Data, solution: dict[str, object], evz: int, evr: int, evtheta: int, ipoints: np.ndarray | list[int] | None = None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
   """Compute electron distribution moments for the semimaxwellian model."""
 
@@ -107,8 +148,7 @@ def moment(data: Data, solution: dict[str, object], evz: int, evr: int, evtheta:
   ipoints_zero = ipoints_arr.astype(int) - 1
 
   nipoints = ipoints_zero.size
-  nE_total = int(nintegrationpoints.sum())
-
+  
   moment1 = np.zeros(nipoints)
   moment2 = np.zeros(nipoints)
   moment4 = np.zeros(nipoints)
@@ -117,32 +157,29 @@ def moment(data: Data, solution: dict[str, object], evz: int, evr: int, evtheta:
   if evr % 2 == 1 or evtheta % 2 == 1:
     return moment_total, moment1, moment2, moment4
 
-  Hijk = lambda a, b: np.maximum(0.0, gamma((2 + evr + evtheta) / 2) * (gammainc((2 + evr + evtheta) / 2, b) - gammainc((2 + evr + evtheta) / 2, a)))
-
-  def dGijk(E_a: np.ndarray, E_b: np.ndarray, G_a: np.ndarray, G_b: np.ndarray) -> np.ndarray:
-    numerator = gamma((1 + evz) / 2) * (G_b * E_a - G_a * E_b) * (gammainc((1 + evz) / 2, E_b) - gammainc((1 + evz) / 2, E_a))
-    numerator += gamma((3 + evz) / 2) * (G_a - G_b) * (gammainc((3 + evz) / 2, E_b) - gammainc((3 + evz) / 2, E_a))
-    denom = E_a - E_b
-    return numerator / denom
-
   factor_base = ne00p * 2 ** ((evz + evr + evtheta) / 2) * gamma((1 + evr) / 2) * gamma((1 + evtheta) / 2) / gamma(1 + (evr + evtheta) / 2) / np.pi ** 1.5
   factor_base *= np.exp(phi[ipoints_zero] - r[ipoints_zero] / h[ipoints_zero] ** 4)
 
+  # Prepare arguments for parallel execution
+  # (ip, factor, phi, h, r, nintegrationpoints, evz, evr, evtheta, alpha)
+  work_args = []
   for idx, ip in enumerate(ipoints_zero):
-    E_grid, pperp_limbwd, pperp_limfwd = _prepare_energy_grid(phi, h, r, ip, nintegrationpoints)
-    H1 = Hijk(pperp_limfwd, pperp_limbwd)
-    dG1 = dGijk(E_grid[:-1], E_grid[1:], H1[:-1], H1[1:])
-    tail = H1[-1] * gamma((1 + evz) / 2) * gammaincc((1 + evz) / 2, E_grid[-1])
-    moment1[idx] = factor_base[idx] * (np.sum(dG1) + tail)
+      work_args.append((ip, factor_base[idx], phi, h, r, nintegrationpoints, evz, evr, evtheta, alpha))
 
-    if evz % 2 != 1:
-      H2 = Hijk(np.zeros_like(pperp_limbwd), np.minimum(pperp_limbwd, pperp_limfwd))
-      dG2 = dGijk(E_grid[:-1], E_grid[1:], H2[:-1], H2[1:])
-      moment2[idx] = 2 * factor_base[idx] * np.sum(dG2)
-
-      H4 = Hijk(pperp_limbwd, pperp_limfwd)
-      dG4 = dGijk(E_grid[:-1], E_grid[1:], H4[:-1], H4[1:])
-      moment4[idx] = 2 * alpha * factor_base[idx] * np.sum(dG4)
+  # Use ThreadPoolExecutor
+  USE_PARALLEL = False
+  
+  if USE_PARALLEL:
+      with ThreadPoolExecutor() as executor:
+          results = list(executor.map(_compute_point_moment, work_args))
+  else:
+      results = [_compute_point_moment(arg) for arg in work_args]
+      
+  # Unpack results
+  for idx, (m1, m2, m4) in enumerate(results):
+      moment1[idx] = m1
+      moment2[idx] = m2
+      moment4[idx] = m4
 
   moment_total = moment1 + moment2 + moment4
   return moment_total, moment1, moment2, moment4
