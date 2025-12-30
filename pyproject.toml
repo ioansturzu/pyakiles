@@ -3,12 +3,14 @@ name = "pyakiles"
 version = "0.1.0"
 description = "Python translation of the AKILES2D MATLAB code"
 authors = [{name = "Codex Translators", email = "ioansturzu@gmail.com"}]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
   "numpy",
   "scipy",
   "pytest",
   "matplotlib",
+  "numba",
+  "numba-scipy",
 ]
 
 [tool.uv]

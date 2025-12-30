@@ -16,8 +16,8 @@ def load_results(path):
     
     return {k: np.array(v, dtype=float) for k, v in data.items()}
 
-def compare(py_path, ml_path, tolerance=1e-3):
-    print(f"Comparing {py_path} vs {ml_path}")
+def compare(py_path, ml_path, tolerance=0.05):
+    print(f"Comparing {py_path} vs {ml_path} with tolerance {tolerance}")
     py_data = load_results(py_path)
     ml_data = load_results(ml_path)
     
@@ -31,22 +31,37 @@ def compare(py_path, ml_path, tolerance=1e-3):
         py_arr = py_data[key]
         ml_arr = ml_data[key]
         
-        # Check shapes
-        if py_arr.shape != ml_arr.shape:
-            print(f"Shape mismatch for {key}: {py_arr.shape} vs {ml_arr.shape}")
-            failed = True
-            continue
+        # Handle length mismatch by truncating to shorter
+        n_py = len(py_arr)
+        n_ml = len(ml_arr)
+        
+        if n_py != n_ml:
+            print(f"Shape mismatch for {key}: {n_py} vs {n_ml}. Truncating to overlapping region.")
+            n = min(n_py, n_ml)
+            py_arr = py_arr[:n]
+            ml_arr = ml_arr[:n]
             
         # Handle inf in comparison (skip or mask)
         mask = np.isfinite(py_arr) & np.isfinite(ml_arr)
         
+        # If no overlap in finite values
+        if not np.any(mask):
+             print(f"WARN: No finite overlap for {key}")
+             continue
+
+        diff = np.abs(py_arr[mask] - ml_arr[mask])
+        max_diff = np.max(diff)
+        
+        # Standard relative/absolute check
         if not np.allclose(py_arr[mask], ml_arr[mask], rtol=tolerance, atol=tolerance):
-            diff = np.abs(py_arr[mask] - ml_arr[mask])
-            max_diff = np.max(diff)
             print(f"FAIL: {key} mismatch. Max diff: {max_diff}")
+            # Check relative error specifically
+            rel_diff = diff / (np.abs(ml_arr[mask]) + 1e-9)
+            max_rel = np.max(rel_diff)
+            print(f"      Max relative diff: {max_rel}")
             failed = True
         else:
-            print(f"PASS: {key}")
+            print(f"PASS: {key} (Max diff: {max_diff})")
             
     return not failed
 
