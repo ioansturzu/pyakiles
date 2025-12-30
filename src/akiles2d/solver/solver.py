@@ -40,6 +40,8 @@ def solver(data: Data, solution: Dict[str, object]) -> Dict[str, object]:
     solution["ne00p"] = max(1e-6, new_ne00p)
 
   try:
+    # Use bounded search to prevent sign flipping or explosion of phi
+    # Bracket [0.1, 10.0] restricts scaling to reasonable magnitude changes
     result = root_scalar(lambda factor: _adapted_errorfcn2(data, solution, factor * np.asarray(solution["phi"])), bracket=[0.1, 10.0], method="brentq")
     if result.converged:
       solution["phi"] = np.asarray(solution["phi"]) * result.root
@@ -51,7 +53,9 @@ def solver(data: Data, solution: Dict[str, object]) -> Dict[str, object]:
       result = root_scalar(lambda phii: _adapted_errorfcn(data, solution, phii, i), bracket=phibracket)
       if result.converged:
         phi_array = np.asarray(solution["phi"], dtype=float)
-        phi_array[i] = result.root
+        # Apply damping to suppress high-frequency oscillations
+        damping = 0.5
+        phi_array[i] = (1.0 - damping) * phi_array[i] + damping * result.root
         solution["phi"] = phi_array
     except Exception:
       continue

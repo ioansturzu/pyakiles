@@ -36,9 +36,13 @@ catch
     disp(['fzero failed for: infty'])
 end
 
+
 for i = npoints-1:-1:2
     try
-        solution.phi(i) = fzero(@(phii)adapted_errorfcn(data,solution,phii,i),phibracket);  
+        new_phi = fzero(@(phii)adapted_errorfcn(data,solution,phii,i),phibracket);
+        % Apply damping
+        damping = 0.5;
+        solution.phi(i) = (1.0 - damping) * solution.phi(i) + damping * new_phi;
     catch
         disp(['fzero failed for: ',num2str(i)])
     end
@@ -62,3 +66,5 @@ function err = adapted_errorfcn2(data,solution,phi) % auxiliary function used by
     solution.phi = phi;
     err = akiles2d.solver.errorfcn(data,solution,length(phi));
 end
+
+

@@ -15,7 +15,7 @@ function fig03_eedf_slices()
 
   % Override solver settings to match Python defaults
   userdata.akiles2d.maxiter = 5;
-  userdata.akiles2d.tolerance = 2e-2;
+  userdata.akiles2d.tolerance = 1e-4;
   userdata.solver.phibracket = [-10.0, 0.0];
 
   [~, sol] = akiles2d.akiles2d([], userdata);

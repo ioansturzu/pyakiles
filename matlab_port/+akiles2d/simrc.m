@@ -12,7 +12,7 @@ function data = simrc(data)
 %% General
 data.akiles2d.simdir = fullfile(pwd,'sims'); % directory where simulation files will be saved
 data.akiles2d.maxiter = 5; % maximum number of iterations to try
-data.akiles2d.tolerance = 2e-2; % norm of errorfcn must be this small to exit solver successfully 
+data.akiles2d.tolerance = 1e-4; % norm of errorfcn must be this small to exit solver successfully 
 
 %% Logger 
 data.logger.filedebuglevel = 3; % file debug level. A higher number prints less messages

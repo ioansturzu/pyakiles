@@ -48,6 +48,11 @@ def plot_profiles(solution: dict) -> None:
   phi = np.asarray(solution["phi"], dtype=float)
   ne = np.asarray(solution["electrons"]["n"], dtype=float)
   ni = np.asarray(solution["ions"]["n"], dtype=float)
+  
+  print(f"DEBUG: Final ne00p: {solution.get('ne00p')}")
+  print(f"DEBUG: ni[0] (at h=1): {ni[0]}")
+  print(f"DEBUG: ne[0] (at h=1): {ne[0]}")
+  print(f"DEBUG: phi[0]: {phi[0]}")
 
   fig, ax1 = plt.subplots(figsize=(6, 4))
   ax1.plot(h, phi, label=r"$\phi$ (V)", color="tab:blue")
@@ -66,7 +71,7 @@ def plot_profiles(solution: dict) -> None:
   ax1.set_title("Figure 1: Potential and density along plume axis")
   fig.tight_layout()
   fig.savefig(Path(__file__).with_suffix(".png"))
-  plt.show()
+  # plt.show() # Disabled for CI/headless
 
 
 def main() -> None:
@@ -83,9 +88,6 @@ def main() -> None:
       "ni": np.asarray(solution["ions"]["n"], dtype=float).tolist(),
   }
   
-  # Handle infinity for JSON compliance if necessary, though standard json might error on inf.
-  # Let's replace inf with a large number or string for safety, or just let users handle it.
-  # For this specific case, h[-1] is inf.
   if len(results["h"]) > 0 and np.isinf(results["h"][-1]):
       results["h"][-1] = "inf"
 

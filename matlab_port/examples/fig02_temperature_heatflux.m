@@ -26,7 +26,7 @@ function fig02_temperature_heatflux(test_mode)
 
   % Override solver settings to match Python defaults
   userdata.akiles2d.maxiter = 5;
-  userdata.akiles2d.tolerance = 2e-2;
+  userdata.akiles2d.tolerance = 1e-4;
   userdata.solver.phibracket = [-10.0, 0.0];
   % Ensure moments postprocessor is active (it is by default but being explicit is fine)
   userdata.postprocessor.postfunctions = {'moments'};
