@@ -20,6 +20,7 @@ class LoggerConfig:
     filedebuglevel: int = 3
     screendebuglevel: int = 3
     linelength: int = 80
+    logfile: str = "log.txt"
 
 @dataclass
 class PotentialConfig:
