@@ -40,12 +40,19 @@ def solver(data: Data, solution: Dict[str, object]) -> Dict[str, object]:
     solution["ne00p"] = max(1e-6, new_ne00p)
 
   try:
+    # DEBUG: Check error at bracket endpoints
+    err_low = _adapted_errorfcn2(data, solution, 0.1 * np.asarray(solution["phi"]))
+    err_high = _adapted_errorfcn2(data, solution, 10.0 * np.asarray(solution["phi"]))
+    print(f"DEBUG: Solver scaling error check: f(0.1)={err_low}, f(10.0)={err_high}")
+
     # Use bounded search to prevent sign flipping or explosion of phi
     # Bracket [0.1, 10.0] restricts scaling to reasonable magnitude changes
     result = root_scalar(lambda factor: _adapted_errorfcn2(data, solution, factor * np.asarray(solution["phi"])), bracket=[0.1, 10.0], method="brentq")
     if result.converged:
       solution["phi"] = np.asarray(solution["phi"]) * result.root
-  except Exception:
+      print(f"DEBUG: Solver scaling converged: factor={result.root}")
+  except Exception as e:
+    print(f"DEBUG: Solver scaling failed: {e}")
     pass
 
   for i in range(npoints - 2, 0, -1):

@@ -40,7 +40,7 @@ def _prepare_energy_grid(phi_slice: np.ndarray, h_slice: np.ndarray, r_slice: np
     if np.isfinite(forward).any():
       pperp_limfwd[idx] = max(0.0, np.nanmax(forward))
   if ip == 0:
-    pperp_limbwd[0] = np.inf
+    pperp_limbwd[:] = np.inf
   return E_grid, pperp_limbwd, pperp_limfwd
 
 
