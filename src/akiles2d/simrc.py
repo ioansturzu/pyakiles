@@ -84,7 +84,7 @@ class Data:
 
 def _default_guess(npoints: int = 500) -> Guess:
     """Generate default guess arrays."""
-    h = np.linspace(1, 5, npoints - 1)
+    h = np.linspace(1, 3, npoints - 1)
     h = np.append(h, np.inf)
     r = np.zeros(npoints)
     phi = np.linspace(0, -4, npoints)

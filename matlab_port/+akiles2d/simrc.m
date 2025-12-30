@@ -35,7 +35,7 @@ data.electrons.alpha = 1; % filling parameter for doubly-trapped regions
 %% Initial guess
     npoints = 500; % number of points in the solution vector. First point must be origin. Last point must be infinity.
 %Can load guess from file, e.g. data.guess = load(fullfile('simulations/some_guess_file.mat'))
-data.guess.h = [linspace(1,5,npoints-1),Inf].'; % column; independent variable: plume characteristic radius at each test point. The first value must be 1; the final value must be infinity
+data.guess.h = [linspace(1,3,npoints-1),Inf].'; % column; independent variable: plume characteristic radius at each test point. The first value must be 1; the final value must be infinity
 data.guess.r = zeros(1,npoints).'; % column; corresponding values of the radius for each test point
 data.guess.phi = linspace(0,-4,npoints).'; % column; potential at each test point. Must be 0 at origin
 data.guess.ne00p = 0.51; % density of the (vz > 0) electrons at the origin

@@ -19,7 +19,7 @@ function fig02_temperature_heatflux(test_mode)
   if test_mode
       disp('Running in TEST mode (npoints=50)');
       npoints = 50;
-      userdata.guess.h = [linspace(1,5,npoints-1),Inf].'; 
+      userdata.guess.h = [linspace(1,3,npoints-1),Inf].'; 
       userdata.guess.r = zeros(1,npoints).'; 
       userdata.guess.phi = linspace(0,-4,npoints).';
   end

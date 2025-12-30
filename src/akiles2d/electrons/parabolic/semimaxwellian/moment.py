@@ -24,23 +24,67 @@ def _prepare_energy_grid(phi_slice: np.ndarray, h_slice: np.ndarray, r_slice: np
   if ip == len(phi_slice) - 1:
     return E_grid, pperp_limbwd, pperp_limfwd
 
-  for idx in range(nE):
-    denom = h_slice[ip] ** 2 / h_slice**2 - 1
-    with np.errstate(divide="ignore", invalid="ignore"):
-      pperp_vals = np.full_like(denom, np.nan)
-      np.divide(E_grid[idx] + phi_slice - phi_slice[ip], denom, out=pperp_vals, where=denom != 0)
-    pperp_vals -= (r_slice[ip] ** 2) / h_slice[ip] ** 4
-    pperp_vals[~np.isfinite(pperp_vals)] = np.nan
+  # Vectorized calculation
+  # Shapes: E_grid (nE, 1), phi_slice (1, nh) -> broadcasting (nE, nh)
+  denom = h_slice[ip] ** 2 / h_slice**2 - 1
+  
+  with np.errstate(divide="ignore", invalid="ignore"):
+    # (nE, 1) + (nh,) - scalar -> (nE, nh)
+    numerator = E_grid[:, None] + phi_slice - phi_slice[ip]
+    # Division by (nh,) broadcasts correctly
+    pperp_vals = np.divide(numerator, denom, where=denom != 0)
+    # Fill masked values with NaN (np.divide leaves uninitialized or 0 where mask is False usually, 
+    # but strictly we want NaN for the min/max logic to work)
+    # Actually np.divide with 'where' retains original values in 'out' if provided, 
+    # or 0 if not initialized. It's safer to initialize or handle masks.
+    # Let's use direct division and let numpy handle infs/nans, then correct.
+    pperp_vals = numerator / denom # This generates infs/nans which is fine.
 
-    backward = pperp_vals[: ip + 1]
-    forward = pperp_vals[ip + 1 :]
+  # Apply correction term
+  pperp_vals -= (r_slice[ip] ** 2) / h_slice[ip] ** 4
+  
+  # Filter invalid values: only replace NaNs, preserve Infs!
+  # np.isnan is false for Inf.
+  # So we just leave it alone. The previous code cleared Infs which was WRONG.
+  # pperp_vals[~np.isfinite(pperp_vals)] = np.nan  <-- REMOVED
 
-    if np.isfinite(backward).any():
-      pperp_limbwd[idx] = max(0.0, np.nanmin(backward))
-    if np.isfinite(forward).any():
-      pperp_limfwd[idx] = max(0.0, np.nanmax(forward))
+  # Split into backward and forward regions
+  # backward: indices 0 to ip (inclusive)
+  # forward: indices ip+1 to end
+  backward = pperp_vals[:, : ip + 1]
+  forward = pperp_vals[:, ip + 1 :]
+
+  # Compute limits using vectorized min/max along axis 1 (spatial dimension)
+  # All warnings for empty slice or all-NaN slice are expected and safe (result is NaN)
+  with np.errstate(invalid='ignore'):
+      min_bwd = np.nanmin(backward, axis=1)
+      max_fwd = np.nanmax(forward, axis=1)
+
+  # Where valid, take max(0, val). Where NaN, keep 0 (initialized).
+  # np.maximum handles NaNs by propagating them or ignoring? 
+  # np.maximum(0, nan) -> nan.
+  # We want 0 if NaN? Or Inf?
+  # If min_bwd is Inf, result Inf.
+  # If min_bwd is NaN, result NaN?
+  # MATLAB Pperp_limbwd initialized to 0.
+  # If nanmin returns NaN, we want to keep it?
+  # No, moment calculation `Hijk` handles limits.
+  # If limit is 0, Hijk uses 0.
+  # So we need to handle NaNs.
+  
+  mask_bwd = np.isfinite(min_bwd) | np.isinf(min_bwd) # True for finite and inf, False for NaN
+  # Actually isfinite is False for Inf.
+  # We want to ACT on valid values (including Inf).
+  # So mask should be ~np.isnan(min_bwd).
+  
+  mask_bwd = ~np.isnan(min_bwd)
+  pperp_limbwd[mask_bwd] = np.maximum(0.0, min_bwd[mask_bwd])
+  
+  mask_fwd = ~np.isnan(max_fwd)
+  pperp_limfwd[mask_fwd] = np.maximum(0.0, max_fwd[mask_fwd])
+
   if ip == 0:
-    pperp_limbwd[:] = np.inf
+    pperp_limbwd[0] = np.inf
   return E_grid, pperp_limbwd, pperp_limfwd
 
 
