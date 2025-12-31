@@ -1,15 +1,14 @@
-% FIGURE 3 (approximate) from "Kinetic electron model for plasma thruster plumes" (2018)
 % Electron energy distribution function sampled at three axial locations using the
 % AKILES2D MATLAB port. Energies and distribution values come directly from the
 % built-in EEDF postprocessor; the grid is shortened for fast execution.
 
-function fig03_eedf_slices()
+function eedf_slices()
   addpath(fullfile(pwd, 'matlab_port'));
   addpath(fullfile(pwd, 'matlab_port', 'src'));
 
   % Use default configuration
   userdata = akiles2d.simrc();
-  userdata.akiles2d.simdir = fullfile(pwd, 'matlab_port', 'examples', 'sims_fig03');
+  userdata.akiles2d.simdir = fullfile(pwd, 'matlab_port', 'examples', 'sims_eedf_slices');
   if ~exist(userdata.akiles2d.simdir, 'dir'); mkdir(userdata.akiles2d.simdir); end
   userdata.akiles2d.datafile = fullfile(userdata.akiles2d.simdir, 'data.mat');
 
@@ -34,9 +33,9 @@ function fig03_eedf_slices()
   ylim([1e-13, 1e2]);
   xlabel('Electron energy E (normalized)');
   ylabel('EEDF (a.u.)');
-  title('Figure 3: EEDF along plume');
+  title('EEDF along plume');
   legend('Location', 'southwest');
-  saveas(gcf, fullfile(userdata.akiles2d.simdir, 'fig03_eedf_slices.png'));
+  saveas(gcf, fullfile(userdata.akiles2d.simdir, 'eedf_slices.png'));
 
   % Save results for CI comparison
   results.h_indices = idx(:)' - 1; % Convert to 0-based indexing for Python consistency
@@ -54,7 +53,7 @@ function fig03_eedf_slices()
       results.EEDF{k} = sol.electrons.EEDF(idx(k), :);
   end
 
-  fid = fopen(fullfile(userdata.akiles2d.simdir, 'fig03_results.json'), 'w');
+  fid = fopen(fullfile(userdata.akiles2d.simdir, 'eedf_slices_results.json'), 'w');
   if fid == -1, error('Cannot create JSON file'); end
   fwrite(fid, jsonencode(results, 'PrettyPrint', true));
   fclose(fid);

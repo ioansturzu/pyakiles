@@ -1,9 +1,8 @@
-% FIGURE 1 (approximate) from "Kinetic electron model for plasma thruster plumes" (2018)
 % On-axis potential and density profiles computed with the AKILES2D MATLAB port.
 % The grid and integration settings are reduced for faster execution compared to
-% the article figures.
+% expected production runs.
 
-function fig01_potential_density()
+function potential_density()
   % Ensure we can find the package. If run from repo root, 'matlab_port' is enough.
   % If run from inside examples, we need to go up.
   if exist('matlab_port', 'dir')
@@ -16,7 +15,7 @@ function fig01_potential_density()
   userdata = akiles2d.simrc();
   
   % Override simulation directory only
-  userdata.akiles2d.simdir = fullfile(pwd, 'sims_fig01');
+  userdata.akiles2d.simdir = fullfile(pwd, 'sims_potential_density');
   if ~exist(userdata.akiles2d.simdir, 'dir')
       mkdir(userdata.akiles2d.simdir);
   end
@@ -34,13 +33,13 @@ function fig01_potential_density()
   plot(sol.h, sol.phi, 'LineWidth', 1.3);
   ylabel('\phi (V)');
   xlabel('Normalized position h');
-  title('Figure 1: potential and density along plume');
+  title('Potential and density along plume');
   yyaxis right;
   plot(sol.h, sol.electrons.n, '--', 'LineWidth', 1.3); hold on;
   plot(sol.h, sol.ions.n, ':', 'LineWidth', 1.3);
   ylabel('Density (normalized)');
   legend({'\phi', 'n_e', 'n_i'}, 'Location', 'northeast');
-  saveas(gcf, fullfile(userdata.akiles2d.simdir, 'fig01_potential_density.png'));
+  saveas(gcf, fullfile(userdata.akiles2d.simdir, 'potential_density.png'));
 
   % Save results for CI comparison
   results.h = sol.h(:)';
@@ -54,7 +53,7 @@ function fig01_potential_density()
       results.h{end} = 'inf';
   end
   
-  fid = fopen(fullfile(userdata.akiles2d.simdir, 'fig01_results.json'), 'w');
+  fid = fopen(fullfile(userdata.akiles2d.simdir, 'potential_density_results.json'), 'w');
   if fid == -1, error('Cannot create JSON file'); end
   fwrite(fid, jsonencode(results, 'PrettyPrint', true));
   fclose(fid);

@@ -1,12 +1,10 @@
 """
-Illustrative reproduction of Figure 3 from *Kinetic electron model for plasma
-thruster plumes* (2018): electron energy distribution functions (EEDF) at
-selected axial positions.
+Electron energy distribution functions (EEDF) at selected axial positions (inspired by *Kinetic electron model for plasma thruster plumes*).
 
 The repository's EEDF postprocessor returns the partial contributions of the
 three electron populations. This example plots the total EEDF versus energy for
 upstream, mid-plume, and far-plume locations using the same fast simulation
-setup as Figures 1 and 2.
+setup as other examples.
 """
 
 import sys
@@ -25,7 +23,7 @@ from akiles2d.simrc import Akiles2DConfig
 
 def run_simulation() -> dict:
   """Run the standard AKILES2D solve (default parameters)."""
-  simdir = Path("examples/python/sims_fig03")
+  simdir = Path("examples/python/sims_eedf_slices")
   
   userdata = {
     "akiles2d": Akiles2DConfig(simdir=str(simdir), datafile=str(simdir / "data.mat"))
@@ -51,7 +49,7 @@ def plot_eedf(solution: dict) -> None:
   ax.set_yscale("log")
   ax.set_xlim(0, 20) # Limit x-axis to relevant energy range
   ax.set_ylim(1e-13, 1e2) # Limit y-axis to match reference
-  ax.set_title("Figure 3: Electron energy distribution along plume")
+  ax.set_title("Electron energy distribution along plume")
   ax.legend()
   fig.tight_layout()
   fig.savefig(Path(__file__).with_suffix(".png"))
@@ -80,7 +78,7 @@ def main() -> None:
       "EEDF": [eedf[i].tolist() for i in indices]
   }
 
-  with open(Path(__file__).with_name("fig03_results.json"), "w") as f:
+  with open(Path(__file__).with_name("eedf_slices_results.json"), "w") as f:
       json.dump(results, f, indent=2)
 
 

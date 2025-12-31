@@ -1,5 +1,5 @@
 """
-Example script mirroring the AKILES2D figure 02 thermodynamics plot.
+Axial electron/ion temperatures and heat flux (inspired by *Kinetic electron model for plasma thruster plumes*).
 
 Running this module executes the default AKILES2D simulation and saves two
 figures: one for electron/ion temperatures and another for the axial heat flux
@@ -63,12 +63,12 @@ from akiles2d.simrc import Akiles2DConfig, PostprocessorConfig, _default_guess
 
 def run_simulation() -> dict:
   """Run the standard AKILES2D solve (default parameters)."""
-  parser = argparse.ArgumentParser(description="Fig 02 Simulation")
+  parser = argparse.ArgumentParser(description="Simulation")
   parser.add_argument("--test", action="store_true", help="Run with reduced grid for testing")
   # Use parse_known_args to avoid conflicts if run under other harnesses
   args, _ = parser.parse_known_args()
 
-  simdir = Path("examples/python/sims_fig02")
+  simdir = Path("examples/python/sims_temperature_heatflux")
   
   # Configure simulation directory
   akiles_conf = Akiles2DConfig(simdir=str(simdir), datafile=str(simdir / "data.mat"))
@@ -105,7 +105,7 @@ def main() -> None:
       "qzz_i": np.asarray(ions["qzz"], dtype=float).tolist(),
   }
 
-  with open(Path(__file__).with_name("fig02_results.json"), "w") as f:
+  with open(Path(__file__).with_name("temperature_heatflux_results.json"), "w") as f:
       json.dump(results, f, indent=2)
 
 

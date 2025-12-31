@@ -1,12 +1,9 @@
 """
-Reproduction of Figure 1 (estimated) from *Kinetic electron model for plasma
-thruster plumes* (2018): axial potential and density profiles.
+Axial potential and density profiles (inspired by *Kinetic electron model for plasma thruster plumes*).
 
-The original article plots the on-axis electrostatic potential and the electron
-and ion densities. This example runs the AKILES2D solver with a trimmed grid and
-integration settings for quick turnaround, then overlays potential and density
-profiles versus the normalized position ``h``. Density magnitudes are computed
-from the kinetic moments produced by the repository's post-processing tools.
+This example runs the AKILES2D solver with a trimmed grid and integration settings for quick turnaround,
+then overlays potential and density profiles versus the normalized position ``h``. Density magnitudes
+are computed from the kinetic moments produced by the repository's post-processing tools.
 """
 
 import sys
@@ -31,7 +28,7 @@ from akiles2d.simrc import Akiles2DConfig, simrc
 
 def run_simulation() -> tuple[dict, dict]:
   """Run the standard AKILES2D solve (default parameters)."""
-  simdir = Path("examples/python/sims_fig01")
+  simdir = Path("examples/python/sims_potential_density")
   
   # Override settings using dataclass to preserve object structure
   userdata = {
@@ -68,7 +65,7 @@ def plot_profiles(solution: dict) -> None:
   lines, labels = ax1.get_legend_handles_labels()
   lines2, labels2 = ax2.get_legend_handles_labels()
   ax2.legend(lines + lines2, labels + labels2, loc="upper right")
-  ax1.set_title("Figure 1: Potential and density along plume axis")
+  ax1.set_title("Potential and density along plume axis")
   fig.tight_layout()
   fig.savefig(Path(__file__).with_suffix(".png"))
   # plt.show() # Disabled for CI/headless
@@ -91,7 +88,7 @@ def main() -> None:
   if len(results["h"]) > 0 and np.isinf(results["h"][-1]):
       results["h"][-1] = "inf"
 
-  with open(Path(__file__).with_name("fig01_results.json"), "w") as f:
+  with open(Path(__file__).with_name("potential_density_results.json"), "w") as f:
       json.dump(results, f, indent=2)
 
 if __name__ == "__main__":

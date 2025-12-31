@@ -24,22 +24,40 @@ jobs:
     - name: Run tests
       run: uv run pytest
       
-    - name: Generate Fig01 Data
+    - name: Generate Potential/Density Data
       run: |
-        # We run the script to generate the output files
-        # Ideally we modify the script to dump JSON or we assume it saves to a known location
-        # The current script saves a .png, we might need a small patch or wrapper to extract numbers
-        # For now, let's assume we will add a flag or a wrapper.
-        # Let's run it as is to ensure no errors first.
-        uv run examples/python/fig01_potential_density.py
+        uv run examples/python/potential_density.py
         
-    - name: Upload Python Results
+    - name: Upload Python Potential/Density Results
       uses: actions/upload-artifact@v4
       with:
         name: python-results
         path: |
-          examples/python/fig01_results.json
-          examples/python/fig01_potential_density.png
+          examples/python/potential_density_results.json
+          examples/python/potential_density.png
+
+    - name: Generate Temperature/Heatflux Data
+      run: uv run examples/python/temperature_heatflux.py --test
+
+    - name: Upload Python Temperature/Heatflux Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-fig02-results
+        path: |
+           examples/python/temperature_heatflux_results.json
+           examples/python/temperature_heatflux_temps.png
+           examples/python/temperature_heatflux_heatflux.png
+
+    - name: Generate EEDF Slices Data
+      run: uv run examples/python/eedf_slices.py
+
+    - name: Upload Python EEDF Slices Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-fig03-results
+        path: |
+           examples/python/eedf_slices_results.json
+           examples/python/eedf_slices.png
 
   matlab-tests:
     runs-on: ubuntu-latest
@@ -55,20 +73,51 @@ jobs:
         source-folder: matlab_port/src
         select-by-folder: matlab_port/tests_matlab
         
-    - name: Run Fig01 Example
+    - name: Run Potential/Density Example
       uses: matlab-actions/run-command@v2
       with:
         command: |
           addpath(genpath('matlab_port')); 
-          fig01_potential_density
+          potential_density
           
     - name: Upload MATLAB Results
       uses: actions/upload-artifact@v4
       with:
         name: matlab-results
         path: |
-          sims_fig01/fig01_results.json
-          sims_fig01/fig01_potential_density.png
+          sims_potential_density/potential_density_results.json
+          sims_potential_density/potential_density.png
+
+    - name: Run Temperature/Heatflux Example
+      uses: matlab-actions/run-command@v2
+      with:
+        command: |
+          addpath(genpath('matlab_port'));
+          temperature_heatflux(true);
+
+    - name: Upload MATLAB Temperature/Heatflux Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: matlab-fig02-results
+        path: |
+          matlab_port/examples/sims_temperature_heatflux/temperature_heatflux_results.json
+          matlab_port/examples/sims_temperature_heatflux/temperatures.png
+          matlab_port/examples/sims_temperature_heatflux/heatflux.png
+
+    - name: Run EEDF Slices Example
+      uses: matlab-actions/run-command@v2
+      with:
+        command: |
+          addpath(genpath('matlab_port'));
+          eedf_slices;
+
+    - name: Upload MATLAB EEDF Slices Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: matlab-fig03-results
+        path: |
+          matlab_port/examples/sims_eedf_slices/eedf_slices_results.json
+          matlab_port/examples/sims_eedf_slices/eedf_slices.png
 
   compare-results:
     needs: [python-tests, matlab-tests]
@@ -87,7 +136,31 @@ jobs:
       with:
         name: matlab-results
         path: results/matlab
-        
+
+    - name: Download Python Temperature/Heatflux Results
+      uses: actions/download-artifact@v4
+      with:
+        name: python-fig02-results
+        path: results/python
+
+    - name: Download MATLAB Temperature/Heatflux Results
+      uses: actions/download-artifact@v4
+      with:
+        name: matlab-fig02-results
+        path: results/matlab
+
+    - name: Download Python EEDF Slices Results
+      uses: actions/download-artifact@v4
+      with:
+        name: python-fig03-results
+        path: results/python
+
+    - name: Download MATLAB EEDF Slices Results
+      uses: actions/download-artifact@v4
+      with:
+        name: matlab-fig03-results
+        path: results/matlab
+
     - name: Install uv
       uses: astral-sh/setup-uv@v4
       
@@ -96,4 +169,11 @@ jobs:
       
     - name: Compare Results
       run: |
-        uv run python scripts/compare_results.py results/python/fig01_results.json results/matlab/fig01_results.json
+        echo "Comparing Potential/Density Results..."
+        uv run python scripts/compare_results.py results/python/potential_density_results.json results/matlab/potential_density_results.json
+        
+        echo "Comparing Temperature/Heatflux Results..."
+        uv run python scripts/compare_results.py results/python/temperature_heatflux_results.json results/matlab/temperature_heatflux_results.json
+        
+        echo "Comparing EEDF Slices Results..."
+        uv run python scripts/compare_results.py results/python/eedf_slices_results.json results/matlab/eedf_slices_results.json
