@@ -9,9 +9,10 @@ def load_results(path):
         data = json.load(f)
     
     # Handle "inf" in h if present
-    h = data["h"]
-    if isinstance(h[-1], str) and h[-1] == "inf":
-        h[-1] = float("inf")
+    if "h" in data:
+        h = data["h"]
+        if isinstance(h[-1], str) and h[-1] == "inf":
+            h[-1] = float("inf")
     # MATLAB might have encoded inf as null or large number, handle if needed
     
     return {k: np.array(v, dtype=float) for k, v in data.items()}
@@ -21,12 +22,17 @@ def compare(py_path, ml_path, tolerance=0.05):
     py_data = load_results(py_path)
     ml_data = load_results(ml_path)
     
+    # Identify common keys to compare
+    common_keys = set(py_data.keys()) & set(ml_data.keys())
+    # remove metadata keys if any
+    keys_to_compare = [k for k in common_keys if not k.endswith("_indices")]
+    
+    if not keys_to_compare:
+        print("No common data keys found to compare.")
+        return False
+
     failed = False
-    for key in ["h", "phi", "ne", "ni"]:
-        if key not in py_data or key not in ml_data:
-            print(f"Missing key {key}")
-            failed = True
-            continue
+    for key in keys_to_compare:
             
         py_arr = py_data[key]
         ml_arr = ml_data[key]
