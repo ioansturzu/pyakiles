@@ -26,38 +26,38 @@ jobs:
       
     - name: Generate Potential/Density Data
       run: |
-        uv run examples/python/potential_density.py
+        uv run examples/potential_density.py
         
     - name: Upload Python Potential/Density Results
       uses: actions/upload-artifact@v4
       with:
         name: python-results
         path: |
-          examples/python/potential_density_results.json
-          examples/python/potential_density.png
+          examples/potential_density_results.json
+          examples/potential_density.png
 
     - name: Generate Temperature/Heatflux Data
-      run: uv run examples/python/temperature_heatflux.py --test
+      run: uv run examples/temperature_heatflux.py --test
 
     - name: Upload Python Temperature/Heatflux Results
       uses: actions/upload-artifact@v4
       with:
         name: python-fig02-results
         path: |
-           examples/python/temperature_heatflux_results.json
-           examples/python/temperature_heatflux_temps.png
-           examples/python/temperature_heatflux_heatflux.png
+           examples/temperature_heatflux_results.json
+           examples/temperature_heatflux_temps.png
+           examples/temperature_heatflux_heatflux.png
 
     - name: Generate EEDF Slices Data
-      run: uv run examples/python/eedf_slices.py
+      run: uv run examples/eedf_slices.py
 
     - name: Upload Python EEDF Slices Results
       uses: actions/upload-artifact@v4
       with:
         name: python-fig03-results
         path: |
-           examples/python/eedf_slices_results.json
-           examples/python/eedf_slices.png
+           examples/eedf_slices_results.json
+           examples/eedf_slices.png
 
   matlab-tests:
     runs-on: ubuntu-latest

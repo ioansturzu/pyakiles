@@ -8,7 +8,7 @@ implementations plus pytest-based tests.
 
 The main purpose of this repository is to rewrite the original MATLAB code in Python to enable modern software engineering practices. Specifically, this allows building a CI/CD pipeline to compare results between the original MATLAB implementation and the new Python translation, ensuring accuracy and regression testing.
 
-Additionally, this repository contains a few examples in `examples/python` that attempt to reproduce results from the main paper of the original authors.
+Additionally, this repository contains a few examples in `examples/` that attempt to reproduce results from the main paper of the original authors.
 
 ## Layout
 
@@ -16,7 +16,7 @@ Additionally, this repository contains a few examples in `examples/python` that 
 - MATLAB-oriented tests: `matlab_port/tests_matlab/`
 - Python tests: `tests/`
 - Original MATLAB source: `matlab_port/src/+akiles2d/`
-- Python translation examples: `examples/python/`
+- Python translation examples: `examples/`
 
 ## Usage with uv
 
