@@ -28,7 +28,7 @@ from akiles2d.simrc import Akiles2DConfig, simrc
 
 def run_simulation() -> tuple[dict, dict]:
   """Run the standard AKILES2D solve (default parameters)."""
-  simdir = Path("examples/python/sims_potential_density")
+  simdir = Path("examples/sims_potential_density")
   
   # Override settings using dataclass to preserve object structure
   userdata = {

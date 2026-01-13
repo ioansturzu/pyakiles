@@ -68,7 +68,7 @@ def run_simulation() -> dict:
   # Use parse_known_args to avoid conflicts if run under other harnesses
   args, _ = parser.parse_known_args()
 
-  simdir = Path("examples/python/sims_temperature_heatflux")
+  simdir = Path("examples/sims_temperature_heatflux")
   
   # Configure simulation directory
   akiles_conf = Akiles2DConfig(simdir=str(simdir), datafile=str(simdir / "data.mat"))

@@ -23,7 +23,7 @@ from akiles2d.simrc import Akiles2DConfig
 
 def run_simulation() -> dict:
   """Run the standard AKILES2D solve (default parameters)."""
-  simdir = Path("examples/python/sims_eedf_slices")
+  simdir = Path("examples/sims_eedf_slices")
   
   userdata = {
     "akiles2d": Akiles2DConfig(simdir=str(simdir), datafile=str(simdir / "data.mat"))
